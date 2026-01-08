@@ -1,0 +1,8 @@
+{
+  "latest": "1.0.38",
+  "min_supported": "1.0.35",
+  "force": true,
+  "download_url": "https://github.com/ArtGavin/TikKaKago-Public/releases/download/v1.0.38/TikKaKago_update.zip",
+  "notes": "Fix auto update + stability improvements"
+}
+
