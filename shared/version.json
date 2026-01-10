@@ -1,8 +1,8 @@
 {
-  "download_url": "https://github.com/ArtGavin/TikKaKago-Public/releases/download/v1.0.42-test1/TikKaKago_update.zip",
-  "min_supported": "1.0.42-test1",
-  "latest": "1.0.42-test1",
-  "current": "1.0.42-test1",
-  "notes": "Release v1.0.42-test1",
-  "force": true
+  "latest": "1.0.44",
+  "current": "1.0.44",
+  "min_supported": "1.0.44",
+  "force": true,
+  "download_url": "https://github.com/ArtGavin/TikKaKago-Public/releases/download/v1.0.44/TikKaKago_update.zip",
+  "notes": "Release v1.0.44"
 }
