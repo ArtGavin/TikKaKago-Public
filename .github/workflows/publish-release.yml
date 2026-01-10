@@ -27,7 +27,6 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "ver=$VER" >> $GITHUB_OUTPUT
 
-          # ✅ ตำแหน่ง zip (ปรับให้ตรงที่คุณเก็บ)
           ZIP1="release/TikKaKago_update.zip"
           ZIP2="TikKaKago_update.zip"
 
@@ -41,15 +40,41 @@ jobs:
             exit 1
           fi
 
-      - name: Create GitHub Release + upload asset
+      - name: Create manifest.json for Release asset
+        id: manifest
+        shell: bash
+        run: |
+          set -e
+          VER="${{ steps.meta.outputs.ver }}"
+          TAG="${{ steps.meta.outputs.tag }}"
+          REPO="${GITHUB_REPOSITORY}"  # ArtGavin/TikKaKago-Public
+
+          # ✅ ใช้ latest/download (เข้ากับ updater ของคุณ)
+          ZIP_URL="https://github.com/${REPO}/releases/latest/download/TikKaKago_update.zip"
+
+          cat > manifest.json <<EOF
+          {
+            "ok": true,
+            "latest": "${VER}",
+            "min_supported": "${VER}",
+            "force": true,
+            "download_url": "${ZIP_URL}",
+            "notes": "Release ${VER}"
+          }
+          EOF
+
+          echo "manifest=manifest.json" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release + upload assets (zip + manifest)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           generate_release_notes: true
           files: |
             ${{ steps.meta.outputs.zip }}
+            ${{ steps.manifest.outputs.manifest }}
 
-      - name: Update shared/version.json (manifest for updater)
+      - name: Update shared/version.json (legacy / optional)
         shell: bash
         run: |
           set -e
@@ -59,6 +84,7 @@ jobs:
 
           mkdir -p shared
 
+          # อันนี้ยังคงเดิมไว้ (เผื่อคุณยังมีโค้ดบางส่วนอ่าน shared/version.json)
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/TikKaKago_update.zip"
 
           cat > shared/version.json <<EOF
