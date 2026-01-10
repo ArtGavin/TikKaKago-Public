@@ -55,7 +55,16 @@ jobs:
           files: |
             TikKaKago_update.zip
 
-      - name: Update shared/version.json (manifest for updater)
+      # ✅ สำคัญ: ตอนนี้เราอยู่ที่ tag (detached HEAD)
+      # ให้สลับไป main ก่อน แล้วค่อยแก้ manifest เพื่อให้ push main ชัวร์
+      - name: Checkout main branch for manifest update
+        shell: bash
+        run: |
+          set -e
+          git fetch origin main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Update shared/version.json (manifest for updater) - UTF8 NO BOM
         shell: bash
         run: |
           set -e
@@ -64,22 +73,41 @@ jobs:
           REPO="${GITHUB_REPOSITORY}"  # ArtGavin/TikKaKago-Public
 
           mkdir -p shared
-
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/TikKaKago_update.zip"
 
-          cat > shared/version.json <<EOF
-          {
-            "latest": "${VER}",
-            "current": "${VER}",
-            "min_supported": "${VER}",
-            "force": true,
-            "download_url": "${DOWNLOAD_URL}",
-            "notes": "Release ${VER}"
-          }
-          EOF
+          python - <<'PY'
+          import json, os
+          ver = os.environ["VER"]
+          tag = os.environ["TAG"]
+          repo = os.environ["REPO"]
+          download_url = os.environ["DOWNLOAD_URL"]
 
+          obj = {
+            "latest": ver,
+            "current": ver,
+            "min_supported": ver,
+            "force": True,
+            "download_url": download_url,
+            "notes": f"Release {tag}",
+          }
+          # ✅ utf-8 แบบไม่ใส่ BOM
+          with open("shared/version.json", "w", encoding="utf-8", newline="\n") as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+          PY
+        env:
+          VER: ${{ steps.meta.outputs.ver }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          REPO: ${{ github.repository }}
+          DOWNLOAD_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.tag }}/TikKaKago_update.zip
+
+      - name: Commit & push manifest to main
+        shell: bash
+        run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add shared/version.json
-          git commit -m "chore: update manifest ${VER}" || echo "No changes to commit"
-          git push origin HEAD:main
+          git commit -m "chore: update manifest ${{ steps.meta.outputs.ver }}" || echo "No changes to commit"
+          git push origin main
